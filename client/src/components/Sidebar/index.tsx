@@ -25,6 +25,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Avatar, Tooltip } from "@mui/material";
 
 const Sidebar = () => {
   const [showProjects, setShowProjects] = useState(true);
@@ -37,49 +39,60 @@ const Sidebar = () => {
   );
 
   const sidebarClassNames = `fixed flex flex-col h-[100%] justify-between shadow-xl
-    transition-all duration-300 h-full z-40 dark:bg-black overflow-y-auto bg-white
-    ${isSidebarCollapsed ? "w-0 hidden" : "w-64"}
+    transition-all duration-300 h-full z-40 bg-white dark:bg-gray-900 overflow-hidden
+    ${isSidebarCollapsed ? "w-0" : "w-64"}
   `;
 
   return (
-    <div className={sidebarClassNames}>
+    <motion.div
+      initial={{ x: -280 }}
+      animate={{ x: 0 }}
+      className={sidebarClassNames}
+    >
       <div className="flex h-[100%] w-full flex-col justify-start">
-        {/* TOP LOGO */}
-        <div className="z-50 flex min-h-[56px] w-64 items-center justify-between bg-white px-6 pt-3 dark:bg-black">
-          <div className="text-xl font-bold text-gray-800 dark:text-white">
-            EDLIST
-          </div>
-          {isSidebarCollapsed ? null : (
-            <button
-              className="py-3"
-              onClick={() => {
-                dispatch(setIsSidebarCollapsed(!isSidebarCollapsed));
-              }}
-            >
-              <X className="h-6 w-6 text-gray-800 hover:text-gray-500 dark:text-white" />
-            </button>
+        {/* Logo Section */}
+        <motion.div
+          className="z-50 flex min-h-20 w-64 items-center justify-between bg-white/80 px-6 backdrop-blur-md dark:bg-gray-900/80"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <Link href="/" className="flex items-center gap-2">
+            <div className="text-xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+              PROJECT MANAGEMENT
+            </div>
+          </Link>
+          {!isSidebarCollapsed && (
+            <Tooltip title="Collapse sidebar" placement="right">
+              <button
+                className="rounded-lg p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
+                onClick={() => dispatch(setIsSidebarCollapsed(!isSidebarCollapsed))}
+              >
+                <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+              </button>
+            </Tooltip>
           )}
-        </div>
-        {/* TEAM */}
-        <div className="flex items-center gap-5 border-y-[1.5px] border-gray-200 px-8 py-4 dark:border-gray-700">
-          <Image
+        </motion.div>
+
+        {/* Team Section */}
+        <div className="flex items-center gap-4 border-y border-gray-100 px-6 py-4 dark:border-gray-800">
+          <Avatar
             src="https://pm-s3-images-csa.s3.us-east-1.amazonaws.com/logo.png"
-            alt="Logo"
-            width={40}
-            height={40}
+            alt="Team"
+            sx={{ width: 36, height: 36 }}
           />
           <div>
-            <h3 className="text-md font-bold tracking-wide dark:text-gray-200">
+            <h3 className="font-semibold text-gray-900 dark:text-white">
               EDROH TEAM
             </h3>
-            <div className="mt-1 flex items-start gap-2">
-              <LockIcon className="mt-[0.1rem] h-3 w-3 text-gray-500 dark:text-gray-400" />
-              <p className="text-xs text-gray-500">Private</p>
+            <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+              <LockIcon className="h-3 w-3" />
+              Private Workspace
             </div>
           </div>
         </div>
-        {/* NAVBAR LINKS */}
-        <nav className="z-10 w-full">
+
+        {/* Navigation */}
+        <nav className="flex-1 space-y-1 px-3 py-4">
           <SidebarLink icon={Home} label="Home" href="/" />
           <SidebarLink icon={Briefcase} label="Timeline" href="/timeline" />
           <SidebarLink icon={Search} label="Search" href="/search" />
@@ -149,7 +162,7 @@ const Sidebar = () => {
           </>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -161,25 +174,29 @@ interface SidebarLinkProps {
 
 const SidebarLink = ({ href, icon: Icon, label }: SidebarLinkProps) => {
   const pathname = usePathname();
-  const isActive =
-    pathname === href || (pathname === "/" && href === "/dashboard");
+  const isActive = pathname === href || (pathname === "/" && href === "/dashboard");
 
   return (
-    <Link href={href} className="w-full">
-      <div
-        className={`relative flex cursor-pointer items-center gap-3 transition-colors hover:bg-gray-100 dark:bg-black dark:hover:bg-gray-700 ${
-          isActive ? "bg-gray-100 text-white dark:bg-gray-600" : ""
-        } justify-start px-8 py-3`}
+    <Link href={href}>
+      <motion.div
+        whileHover={{ x: 4 }}
+        className={`group flex items-center gap-3 rounded-lg px-3 py-2 transition-colors
+          ${isActive
+            ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-200'
+            : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800/50'
+          }`}
       >
+        <Icon className={`h-5 w-5 ${isActive ? 'text-indigo-600 dark:text-indigo-200' : 'text-gray-500 dark:text-gray-400'}`} />
+        <span className="font-medium">{label}</span>
         {isActive && (
-          <div className="absolute left-0 top-0 h-[100%] w-[5px] bg-blue-200" />
+          <motion.div
+            layoutId="activeIndicator"
+            className="absolute left-0 h-full w-1 rounded-r-full bg-indigo-500"
+            initial={false}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          />
         )}
-
-        <Icon className="h-6 w-6 text-gray-800 dark:text-gray-100" />
-        <span className={`font-medium text-gray-800 dark:text-gray-100`}>
-          {label}
-        </span>
-      </div>
+      </motion.div>
     </Link>
   );
 };
